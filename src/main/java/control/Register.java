@@ -114,4 +114,4 @@ public class Register extends HttpServlet {
 	        
 	        return hashtext;
 	    }
-}
+} 
