@@ -101,7 +101,7 @@ public class Login extends HttpServlet {
 	private String checkPsw(String psw) {
 		MessageDigest md = null;
 		try {
-			md = MessageDigest.getInstance("MD5");
+			md = MessageDigest.getInstance("SHA-256");
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -109,6 +109,10 @@ public class Login extends HttpServlet {
 		byte[] messageDigest = md.digest(psw.getBytes());
 		BigInteger number = new BigInteger(1, messageDigest);
 		String hashtext = number.toString(16);
+		
+		while (hashtext.length() < 64) {
+			hashtext = "0" + hashtext;
+		}
 		
 		return hashtext;
 	}
