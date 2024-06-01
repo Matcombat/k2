@@ -36,7 +36,7 @@ public class ProductControl extends HttpServlet {
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-
+	try {
 		if (request.getParameter("action") != null && request.getParameter("action").compareTo("dettaglio") == 0) {
 			String codiceStr = request.getParameter("codice");
 			int codice = Integer.parseInt(codiceStr);
@@ -46,12 +46,11 @@ public class ProductControl extends HttpServlet {
 				ProductBean prodotto = model.doRetrieveByKey(codice);
 				request.setAttribute("prodottoDettaglio", prodotto);
 			} catch (SQLException e) {
-				e.printStackTrace();
+				handleError(request, response, e);
+				return;
 			}
-			finally {
-				RequestDispatcher dispatcher = getServletContext().getRequestDispatcher("/productDetail.jsp");
-				dispatcher.forward(request, response);
-			}
+			RequestDispatcher dispatcher = getServletContext().getRequestDispatcher("/productDetail.jsp");
+			dispatcher.forward(request, response);
 		}
 		else if (request.getParameter("action") != null && request.getParameter("action").compareTo("elimina") == 0) {
 			@SuppressWarnings("unchecked")
@@ -71,15 +70,12 @@ public class ProductControl extends HttpServlet {
 			try {
 				bean = model.doRetrieveByKey(Integer.parseInt(request.getParameter("codice")));
 				request.setAttribute("updateProd", bean);
-			} catch (NumberFormatException e) {
-				e.printStackTrace();
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
-			finally {
-				RequestDispatcher dispatcher = getServletContext().getRequestDispatcher("/modifica-prodotto.jsp"); 
-				dispatcher.forward(request, response);
-			}
+			} catch (NumberFormatException | SQLException e) {
+				handleError(request, response, e);
+				return;
+			} 
+			RequestDispatcher dispatcher = getServletContext().getRequestDispatcher("/modifica-prodotto.jsp"); 
+			dispatcher.forward(request, response);
 		}
 		else if (request.getParameter("action") != null && request.getParameter("action").compareTo("modifica") == 0) {
 			ProductBean bean = new ProductBean();
@@ -109,23 +105,37 @@ public class ProductControl extends HttpServlet {
 			dispatcher.forward(request, response);	
 		}
 		else {
-		String tipologia = (String) request.getSession().getAttribute("tipologia");
+			String tipologia = (String) request.getSession().getAttribute("tipologia");
 
 		try { 
 			request.removeAttribute("products");
 			request.setAttribute("products", model.doRetrieveAll(tipologia));
 		} catch (SQLException e) {
-			System.out.println("Error: " + e.getMessage());
+			handleError(request, response, e);
+			return;
 		}
 
 		RequestDispatcher dispatcher = getServletContext().getRequestDispatcher("/ProductsPage.jsp?tipologia=" + tipologia);
 		dispatcher.forward(request, response);
 		}
+	}catch (Exception e) {
+		handleError(request, response, e);
 	}
+}
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		doGet(request, response);
 	}
+	
+	private void handleError(HttpServletRequest request, HttpServletResponse response, Exception e) 
+            throws ServletException, IOException {
 
+        e.printStackTrace();
+
+        request.setAttribute("errorMessage", "Si è verificato un errore interno. Per favore riprova più tardi.");
+
+        RequestDispatcher dispatcher = getServletContext().getRequestDispatcher("/error.jsp");
+        dispatcher.forward(request, response);
+    }
 }
