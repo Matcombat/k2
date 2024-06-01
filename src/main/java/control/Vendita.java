@@ -38,6 +38,18 @@ public class Vendita extends HttpServlet {
         // TODO Auto-generated constructor stub
     }
 
+    private String sanitizeInput(String input) {
+        if (input != null) {
+            input = input.replaceAll("&", "&amp;");
+            input = input.replaceAll("<", "&lt;");
+            input = input.replaceAll(">", "&gt;");
+            input = input.replaceAll("\"", "&quot;");
+            input = input.replaceAll("'", "&#x27;");
+            input = input.replaceAll("/", "&#x2F;");
+        }
+        return input;
+    }
+    
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
@@ -59,23 +71,28 @@ public class Vendita extends HttpServlet {
 		                    product.setImmagine(name);
 		                }
 		                else {
-		                	if (item.getFieldName().compareTo("nome") == 0) {
-		                		product.setNome(item.getString());
-		                	}
-		                	else if (item.getFieldName().compareTo("prezzo") == 0) {
-		                		product.setPrezzo(Double.parseDouble(item.getString()));
-		                	}
-		                	else if (item.getFieldName().compareTo("spedizione") == 0) {
-		                		product.setSpedizione(Double.parseDouble(item.getString()));
-		                	}
-		                	else if (item.getFieldName().compareTo("tipologia") == 0) {
-		                		product.setTipologia(item.getString());
-		                	}
-							else if (item.getFieldName().compareTo("tag") == 0) {
-								product.setTag(item.getString());
-							}
-							else if (item.getFieldName().compareTo("descrizione") == 0) {
-		                		product.setDescrizione(item.getString());
+	                        String fieldName = item.getFieldName();
+	                        String fieldValue = sanitizeInput(item.getString());
+
+	                        switch (fieldName) {
+	                            case "nome":
+	                                product.setNome(fieldValue);
+	                                break;
+	                            case "prezzo":
+	                                product.setPrezzo(Double.parseDouble(fieldValue));
+	                                break;
+	                            case "spedizione":
+	                                product.setSpedizione(Double.parseDouble(fieldValue));
+	                                break;
+	                            case "tipologia":
+	                                product.setTipologia(fieldValue);
+	                                break;
+	                            case "tag":
+	                                product.setTag(fieldValue);
+	                                break;
+	                            case "descrizione":
+	                                product.setDescrizione(fieldValue);
+	                                break;
 		                	}
 		                }
 		            }
@@ -84,15 +101,13 @@ public class Vendita extends HttpServlet {
 		           request.setAttribute("message", "File Uploaded Successfully");
 		           
 		        } catch (Exception ex) {
-		           
+		        	request.setAttribute("message", "File Upload Failed due to " + ex);
 		        }          
 
+		    }else{
+		    	request.setAttribute("message", "Sorry this Servlet only handles file upload request");
 		    }
-		    else{
-		        request.setAttribute("message",
-		                             "Sorry this Servlet only handles file upload request");
-		       
-		    }
+		    
 		    ProductModel model = new ProductModel();
 		    try {
 				model.doSave(product);
